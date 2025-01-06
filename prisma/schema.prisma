@@ -1,0 +1,121 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  firstName     String
+  lastName      String
+  role          UserRole       @default(MEMBER)
+  isVerified    Boolean        @default(false)
+  isActive      Boolean        @default(true)
+  borrowedBooks BorrowedBook[]
+  transactions  Transaction[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
+
+  @@map("users")
+}
+
+model Book {
+  id            String         @id @default(uuid())
+  isbn          String         @unique
+  title         String
+  totalCopies   Int
+  availableCopies Int
+  borrowedBooks BorrowedBook[]
+  categories    CategoryBook[]
+  authors       AuthorBook[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
+
+  @@map("books")
+}
+
+model Author {
+  id        String       @id @default(uuid())
+  name      String
+  books     AuthorBook[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@map("authors")
+}
+
+model Category {
+  id        String         @id @default(uuid())
+  name      String         @unique
+  books     CategoryBook[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@map("categories")
+}
+
+model BorrowedBook {
+  id         String     @id @default(uuid())
+  userId     String
+  bookId     String
+  borrowDate DateTime   @default(now())
+  dueDate    DateTime
+  returnDate DateTime?
+  user       User       @relation(fields: [userId], references: [id])
+  book       Book       @relation(fields: [bookId], references: [id])
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@map("borrowed_books")
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  userId    String
+  amount    Float
+  type      String   // FINE_PAYMENT, DEPOSIT, etc.
+  status    String   // PENDING, COMPLETED, FAILED
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("transactions")
+}
+
+model AuthorBook {
+  authorId  String
+  bookId    String
+  author    Author    @relation(fields: [authorId], references: [id])
+  book      Book      @relation(fields: [bookId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@id([authorId, bookId])
+  @@map("author_books")
+}
+
+model CategoryBook {
+  categoryId String
+  bookId     String
+  category   Category  @relation(fields: [categoryId], references: [id])
+  book       Book      @relation(fields: [bookId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@id([categoryId, bookId])
+  @@map("category_books")
+}
