@@ -1,78 +1,79 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { JWT_SECRET, JWT_EXPIRES_IN } from '../../config/constants';
 import prisma from '../../config/database';
 import { RegisterUserDto, RegisterAdminDto, LoginUserDto, AuthResponse } from '../types/auth.types';
-import { UserRole } from '@prisma/client';
+import { JWT_SECRET, JWT_EXPIRES_IN } from '../../config/constants';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 export class AuthService {
-  static async register(userData: RegisterUserDto): Promise<AuthResponse> {
+  static async register(data: RegisterUserDto): Promise<AuthResponse> {
     const existingUser = await prisma.user.findUnique({
-      where: { email: userData.email },
+      where: { email: data.email }
     });
 
     if (existingUser) {
-      throw new Error('User already exists');
+      throw new Error('Email already registered');
     }
 
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const user = await prisma.user.create({
       data: {
-        ...userData,
+        ...data,
         password: hashedPassword,
-        role: UserRole.MEMBER,
-      },
+        role: 'MEMBER'
+      }
     });
 
-    const token = this.generateToken(user);
-    const { password, ...userWithoutPassword } = user;
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
 
+    const { password, ...userWithoutPassword } = user;
     return {
-      token,
       user: userWithoutPassword,
+      token
     };
   }
 
-  static async registerAdmin(userData: RegisterAdminDto): Promise<AuthResponse> {
-    // Verify registration code
-    const adminCode = process.env.ADMIN_REGISTRATION_CODE;
-    if (!adminCode || userData.registrationCode !== adminCode) {
-      throw new Error('Invalid admin registration code');
-    }
-
+  static async registerAdmin(data: RegisterAdminDto): Promise<AuthResponse> {
     const existingUser = await prisma.user.findUnique({
-      where: { email: userData.email },
+      where: { email: data.email }
     });
 
     if (existingUser) {
-      throw new Error('User already exists');
+      throw new Error('Email already registered');
     }
 
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    const { registrationCode, ...userDataWithoutCode } = userData;
     const user = await prisma.user.create({
       data: {
-        ...userDataWithoutCode,
+        email: data.email,
         password: hashedPassword,
-        role: UserRole.ADMIN,
-        isVerified: true, // Admins are automatically verified
-      },
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: 'ADMIN'
+      }
     });
 
-    const token = this.generateToken(user);
-    const { password, ...userWithoutPassword } = user;
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
 
+    const { password, ...userWithoutPassword } = user;
     return {
-      token,
       user: userWithoutPassword,
+      token
     };
   }
 
-  static async login(credentials: LoginUserDto): Promise<AuthResponse> {
+  static async login(data: LoginUserDto): Promise<AuthResponse> {
     const user = await prisma.user.findUnique({
-      where: { email: credentials.email },
+      where: { email: data.email }
     });
 
     if (!user) {
@@ -80,36 +81,24 @@ export class AuthService {
     }
 
     if (!user.isActive) {
-      throw new Error('User account is disabled');
+      throw new Error('Account is disabled');
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      credentials.password,
-      user.password
-    );
-
+    const isPasswordValid = await bcrypt.compare(data.password, user.password);
     if (!isPasswordValid) {
       throw new Error('Invalid credentials');
     }
 
-    const token = this.generateToken(user);
-    const { password, ...userWithoutPassword } = user;
-
-    return {
-      token,
-      user: userWithoutPassword,
-    };
-  }
-
-  private static generateToken(user: { id: string; email: string; role: UserRole }) {
-    return jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-      },
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
+
+    const { password, ...userWithoutPassword } = user;
+    return {
+      user: userWithoutPassword,
+      token
+    };
   }
 } 

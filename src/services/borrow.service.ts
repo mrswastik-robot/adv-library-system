@@ -5,7 +5,7 @@ import { Prisma } from '@prisma/client';
 
 export class BorrowService {
   static async borrowBook(userId: string, data: BorrowBookDto): Promise<BorrowedBookResponse> {
-    // Check if user is verified and active
+    // Check if user is active
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -19,10 +19,6 @@ export class BorrowService {
 
     if (!user) {
       throw new Error('User not found');
-    }
-
-    if (!user.isVerified) {
-      throw new Error('Email verification required before borrowing books');
     }
 
     if (!user.isActive) {
