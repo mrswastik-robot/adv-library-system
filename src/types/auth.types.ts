@@ -7,6 +7,10 @@ export interface RegisterUserDto {
   lastName: string;
 }
 
+export interface RegisterAdminDto extends RegisterUserDto {
+  registrationCode: string;
+}
+
 export interface LoginUserDto {
   email: string;
   password: string;

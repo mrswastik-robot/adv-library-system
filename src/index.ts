@@ -5,6 +5,9 @@ import rateLimit from 'express-rate-limit';
 import { config } from 'dotenv';
 import winston from 'winston';
 import authRoutes from './routes/auth.routes';
+import bookRoutes from './routes/book.routes';
+import authorRoutes from './routes/author.routes';
+import categoryRoutes from './routes/category.routes';
 
 
 config();
@@ -38,6 +41,9 @@ app.use(limiter);
 
 
 app.use('/api/auth', authRoutes);
+app.use('/api/books', bookRoutes);
+app.use('/api/authors', authorRoutes);
+app.use('/api/categories', categoryRoutes);
 
 
 app.get('/health', (req, res) => {

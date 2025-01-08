@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { logger } from '../index';
-import { RegisterUserDto, LoginUserDto } from '../types/auth.types';
+import { RegisterUserDto, RegisterAdminDto, LoginUserDto } from '../types/auth.types';
 import { z } from 'zod';
 
 // Validation schemas using zod
@@ -10,6 +10,10 @@ const registerSchema = z.object({
   password: z.string().min(6),
   firstName: z.string().min(2),
   lastName: z.string().min(2),
+});
+
+const registerAdminSchema = registerSchema.extend({
+  registrationCode: z.string().min(1),
 });
 
 const loginSchema = z.object({
@@ -27,6 +31,33 @@ export class AuthController {
       res.status(201).json(result);
     } catch (error) {
       logger.error('Registration error:', error);
+      
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: 'Validation error', 
+          errors: error.errors 
+        });
+        return;
+      }
+      
+      if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+        return;
+      }
+      
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  static async registerAdmin(req: Request, res: Response): Promise<void> {
+    try {
+      const validatedData = registerAdminSchema.parse(req.body);
+      const userData: RegisterAdminDto = validatedData;
+      
+      const result = await AuthService.registerAdmin(userData);
+      res.status(201).json(result);
+    } catch (error) {
+      logger.error('Admin registration error:', error);
       
       if (error instanceof z.ZodError) {
         res.status(400).json({ 

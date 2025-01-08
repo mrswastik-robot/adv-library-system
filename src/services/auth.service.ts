@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET, JWT_EXPIRES_IN } from '../../config/constants';
 import prisma from '../../config/database';
-import { RegisterUserDto, LoginUserDto, AuthResponse } from '../types/auth.types';
+import { RegisterUserDto, RegisterAdminDto, LoginUserDto, AuthResponse } from '../types/auth.types';
 import { UserRole } from '@prisma/client';
 
 export class AuthService {
@@ -22,6 +22,42 @@ export class AuthService {
         ...userData,
         password: hashedPassword,
         role: UserRole.MEMBER,
+      },
+    });
+
+    const token = this.generateToken(user);
+    const { password, ...userWithoutPassword } = user;
+
+    return {
+      token,
+      user: userWithoutPassword,
+    };
+  }
+
+  static async registerAdmin(userData: RegisterAdminDto): Promise<AuthResponse> {
+    // Verify registration code
+    const adminCode = process.env.ADMIN_REGISTRATION_CODE;
+    if (!adminCode || userData.registrationCode !== adminCode) {
+      throw new Error('Invalid admin registration code');
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: userData.email },
+    });
+
+    if (existingUser) {
+      throw new Error('User already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+    const { registrationCode, ...userDataWithoutCode } = userData;
+    const user = await prisma.user.create({
+      data: {
+        ...userDataWithoutCode,
+        password: hashedPassword,
+        role: UserRole.ADMIN,
+        isVerified: true, // Admins are automatically verified
       },
     });
 
