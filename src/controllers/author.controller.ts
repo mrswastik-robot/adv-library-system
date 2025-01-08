@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthorService } from '../services/author.service';
-import { logger } from '../index';
+import logger from '../../config/logger';
 import { CreateAuthorDto, UpdateAuthorDto, AuthorQueryParams } from '../types/author.types';
 import { z } from 'zod';
 

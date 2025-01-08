@@ -2,31 +2,19 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { config } from 'dotenv';
-import winston from 'winston';
+import 'dotenv/config';
+
+import logger from '../config/logger';
+import { API_RATE_LIMIT } from '../config/constants';
 import authRoutes from './routes/auth.routes';
 import bookRoutes from './routes/book.routes';
-import authorRoutes from './routes/author.routes';
-import categoryRoutes from './routes/category.routes';
-
-
-config();
+import borrowRoutes from './routes/borrow.routes';
+import paymentRoutes from './routes/payment.routes';
+import analyticsRoutes from './routes/analytics.routes';
 
 const app = express();
 
-export const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.json(),
-  transports: [
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'combined.log' }),
-    new winston.transports.Console({
-      format: winston.format.simple(),
-    }),
-  ],
-});
-
-
+// Middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
@@ -35,28 +23,32 @@ app.use(express.urlencoded({ extended: true }));
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: API_RATE_LIMIT
 });
 app.use(limiter);
 
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
-app.use('/api/authors', authorRoutes);
-app.use('/api/categories', categoryRoutes);
-
-
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK' });
-});
+app.use('/api/borrow', borrowRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  logger.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  logger.error('Unhandled error:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error'
+  });
 });
 
-
+// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);

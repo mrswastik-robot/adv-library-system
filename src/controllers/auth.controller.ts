@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
-import { logger } from '../index';
+import logger from '../../config/logger';
 import { RegisterUserDto, RegisterAdminDto, LoginUserDto } from '../types/auth.types';
 import { z } from 'zod';
 

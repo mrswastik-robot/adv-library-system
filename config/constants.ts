@@ -1,15 +1,20 @@
-export const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-export const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1d';
+// Environment variables with defaults
+export const {
+  JWT_SECRET = 'your-secret-key',
+  JWT_EXPIRES_IN = '1d',
+  SMTP_HOST = 'smtp.gmail.com',
+  SMTP_PORT = '587',
+  SMTP_USER = 'your-email@gmail.com',
+  SMTP_PASS = 'your-app-specific-password'
+} = process.env;
 
-export const BOOK_BORROW_LIMIT = 3;
+// Book borrowing constants
+export const BOOK_BORROW_LIMIT = 5;
 export const BORROW_DURATION_DAYS = 14;
-export const FINE_PER_DAY = 1; // in USD
+export const FINE_PER_DAY = 1.00; // in dollars
 
-export const EMAIL_FROM = process.env.EMAIL_FROM || 'library@example.com';
-
-// Rate limiting
-export const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-export const RATE_LIMIT_MAX_REQUESTS = 100;
+// API rate limiting
+export const API_RATE_LIMIT = 100; // requests per 15 minutes
 
 // Pagination defaults
 export const DEFAULT_PAGE_SIZE = 10;

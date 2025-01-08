@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { BookService } from '../services/book.service';
-import { logger } from '../index';
+import logger from '../../config/logger';
 import { CreateBookDto, UpdateBookDto, BookQueryParams } from '../types/book.types';
 import { z } from 'zod';
 

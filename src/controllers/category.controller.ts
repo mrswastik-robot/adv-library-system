@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { CategoryService } from '../services/category.service';
-import { logger } from '../index';
+import logger from '../../config/logger';
 import { CreateCategoryDto, UpdateCategoryDto, CategoryQueryParams } from '../types/category.types';
 import { z } from 'zod';
 

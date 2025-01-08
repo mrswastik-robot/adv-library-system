@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../../config/constants';
 import { TokenPayload } from '../types/auth.types';
 import prisma from '../../config/database';
-import { logger } from '../index';
+import logger from '../../config/logger';
 
 declare global {
   namespace Express {
