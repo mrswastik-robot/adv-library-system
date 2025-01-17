@@ -11,6 +11,8 @@ import bookRoutes from './routes/book.routes';
 import borrowRoutes from './routes/borrow.routes';
 import paymentRoutes from './routes/payment.routes';
 import analyticsRoutes from './routes/analytics.routes';
+import authorRoutes from './routes/author.routes';
+import categoryRoutes from './routes/category.routes';
 
 const app = express();
 
@@ -38,6 +40,8 @@ app.use('/api/books', bookRoutes);
 app.use('/api/borrow', borrowRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/authors', authorRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
